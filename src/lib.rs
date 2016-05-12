@@ -6,7 +6,7 @@ extern crate syntax;
 use rustc_plugin::registry::Registry;
 use syntax::ast::{Block, DeclKind, DUMMY_NODE_ID, Expr, ExprKind, Ident,
                   ImplItem, ImplItemKind, Item, ItemKind, LitKind, Local,
-                  MetaItem, Pat, PatKind, Path, PathParameters, PathSegment,
+                  MetaItem, Mod, Pat, PatKind, Path, PathParameters, PathSegment,
                   Stmt, StmtKind, StrStyle, TraitItem, TraitItemKind};
 use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, dummy_spanned, Span};
@@ -28,24 +28,42 @@ pub fn insert_flame_guard(_cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
 
 fn flame_item(i: &Item) -> Item {
     let base = i.clone();
-    match i.node {
-        ItemKind::Fn(ref decl,
-                     unsafety,
-                     constness,
-                     abi,
-                     ref generics,
-                     ref block) =>
-            Item {
-                node: ItemKind::Fn(decl.clone(),
-                                   unsafety,
-                                   constness,
-                                   abi,
-                                   generics.clone(),
-                                   P(flame_block(i.ident, block))),
-                ..base
-            },
-        _ => base
+    Item {
+        node: match i.node {
+            ItemKind::Mod(ref m) =>
+                ItemKind::Mod(flame_mod(m)),
+            ItemKind::Trait(unsafety, ref generic, ref bounds, ref tis) =>
+                ItemKind::Trait(unsafety,
+                                generic.clone(),
+                                bounds.clone(),
+                                flame_items(tis)),
+            ItemKind::Fn(ref decl,
+                         unsafety,
+                         constness,
+                         abi,
+                         ref generics,
+                         ref block) =>
+                ItemKind::Fn(decl.clone(),
+                             unsafety,
+                             constness,
+                             abi,
+                             generics.clone(),
+                             P(flame_block(i.ident, block))),
+            _ => return base
+        },
+        ..base
     }
+}
+
+fn flame_mod(m: &Mod) -> Mod {
+    Mod {
+        inner: m.inner,
+        items: m.items.iter().map(|i| P(flame_item(i))).collect()
+    }
+}
+
+fn flame_items(items: &[TraitItem]) -> Vec<TraitItem> {
+    items.iter().map(flame_trait_item).collect()
 }
 
 fn flame_trait_item(ti: &TraitItem) -> TraitItem {
@@ -126,7 +144,7 @@ fn flame_stmt(ident: Ident) -> Stmt {
         span: DUMMY_SP,
         attrs: None
     };
-    dummy_spanned(StmtKind::Decl(P(dummy_spanned(DeclKind::Local(P(local)))), 
+    dummy_spanned(StmtKind::Decl(P(dummy_spanned(DeclKind::Local(P(local)))),
                                  DUMMY_NODE_ID))
 }
 
