@@ -1,7 +1,7 @@
 A plugin to insert appropriate `flame::start_guard(_)` calls (for use with [flame](https://github.com/TyOverby/flame))
 
 [![Build Status](https://travis-ci.org/llogiq/flamer.svg)](https://travis-ci.org/llogiq/flamer) 
-[![Current Version](http://meritbadge.herokuapp.com/flamer)](https://crates.io/crates/flamer)
+[![Current Version](https://img.shields.io/crates/v/flamer)](https://crates.io/crates/flamer)
 
 **This needs a nightly rustc!** Because flamer is a compiler plugin, it uses unstable APIs, which are not available on stable or beta. It may be possible to extend flamer to allow use with syntex, but this hasn't been tried yet.
 
