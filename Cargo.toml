@@ -3,7 +3,10 @@ name = "flamer"
 version = "0.1.0"
 authors = ["Andre Bogus <bogusandre@gmail.com>"]
 description = "a procedural macro to insert `flame::start_guard(_)` calls"
-license = "Apache 2"
+license = "Apache-2.0"
+repository = "https://github.com/llogiq/flamer"
+readme = "README.md"
+keywords = ["flame-graph", "profiling", "compiler-plugin"]
 
 [lib]
 plugin = true
