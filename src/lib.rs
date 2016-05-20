@@ -4,12 +4,13 @@ extern crate rustc_plugin;
 extern crate syntax;
 
 use rustc_plugin::registry::Registry;
-use syntax::ast::{Block, Ident, Item, MetaItem};
+use syntax::ast::{Attribute, Block, Ident, Item, MetaItem, MetaItemKind};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
+use syntax::feature_gate::AttributeType;
 use syntax::parse::token;
 
 pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
@@ -31,6 +32,15 @@ struct Flamer<'a, 'cx: 'a> {
 
 impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
     fn fold_item_simple(&mut self, i: Item) -> Item {
+        fn is_flame_annotation(attr: &Attribute) -> bool {
+            if let MetaItemKind::Word(ref name) = attr.node.value.node {
+                name == "flame" || name == "noflame"
+            } else {
+                false
+            }
+        }
+        // don't double-flame nested annotations
+        if i.attrs.iter().any(is_flame_annotation) { return i; }
         self.ident = i.ident; // update in case of nested items
         fold::noop_fold_item_simple(i, self)
     }
@@ -50,4 +60,5 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
 pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(token::intern("flame"),
         SyntaxExtension::MultiModifier(Box::new(insert_flame_guard)));
+    reg.register_attribute(String::from("noflame"), AttributeType::Whitelisted);
 }
