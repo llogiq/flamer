@@ -4,7 +4,7 @@ extern crate rustc_plugin;
 extern crate syntax;
 
 use rustc_plugin::registry::Registry;
-use syntax::ast::{Attribute, Block, Ident, Item, MetaItem, MetaItemKind};
+use syntax::ast::{Attribute, Block, Ident, Item, MetaItem, MetaItemKind, ItemKind};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, Span};
@@ -41,16 +41,22 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
         }
         // don't double-flame nested annotations
         if i.attrs.iter().any(is_flame_annotation) { return i; }
-        self.ident = i.ident; // update in case of nested items
-        fold::noop_fold_item_simple(i, self)
+        if let ItemKind::Mac(_) = i.node {
+            return i;
+        }else {
+            self.ident = i.ident; // update in case of nested items
+            fold::noop_fold_item_simple(i, self)
+        }
     }
 
     fn fold_block(&mut self, block: P<Block>) -> P<Block> {
         block.map(|block| {
             let name = self.cx.expr_str(DUMMY_SP, self.ident.name.as_str());
             quote_block!(self.cx, {
-                let _ = ::flame::start_guard($name);
-                $block
+                let g = ::flame::start_guard($name);
+                let r = $block;
+                g.end();
+                r
             }).unwrap()
         })
     }
