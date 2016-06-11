@@ -4,14 +4,16 @@ extern crate rustc_plugin;
 extern crate syntax;
 
 use rustc_plugin::registry::Registry;
-use syntax::ast::{Attribute, Block, Ident, Item, MetaItem, MetaItemKind, ItemKind};
+use syntax::ast::{Attribute, Block, Ident, Item, Mac, MetaItem, MetaItemKind, ItemKind};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
+use syntax::ext::expand::expand_item;
 use syntax::feature_gate::AttributeType;
 use syntax::parse::token;
+use syntax::util::small_vector::SmallVector;
 
 pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
                           a: Annotatable) -> Annotatable {
