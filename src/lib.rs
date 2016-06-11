@@ -31,6 +31,17 @@ struct Flamer<'a, 'cx: 'a> {
 }
 
 impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
+    fn fold_item(&mut self, item: P<Item>) -> SmallVector<P<Item>> {
+        if let ItemKind::Mac(_) = item.node {
+            let expanded = expand_item(item, &mut self.cx.expander());
+            expanded.into_iter()
+                    .flat_map(|i| fold::noop_fold_item(i, self).into_iter())
+                    .collect()
+        } else {
+            fold::noop_fold_item(item, self)
+        }
+    }
+    
     fn fold_item_simple(&mut self, i: Item) -> Item {
         fn is_flame_annotation(attr: &Attribute) -> bool {
             if let MetaItemKind::Word(ref name) = attr.node.value.node {
@@ -59,6 +70,10 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
                 r
             }).unwrap()
         })
+    }
+    
+    fn fold_mac(&mut self, mac: Mac) -> Mac {
+        mac
     }
 }
 
