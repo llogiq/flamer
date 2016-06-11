@@ -35,5 +35,5 @@ fn test_flame() {
     let frames = flame::frames();
     assert_eq!(1, frames.len());
     let roots = &frames[0].roots;
-    assert_eq!(95, roots.len());
+    assert_eq!(1, roots.len());
 }
