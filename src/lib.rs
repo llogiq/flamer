@@ -4,13 +4,14 @@ extern crate rustc_plugin;
 extern crate syntax;
 
 use rustc_plugin::registry::Registry;
-use syntax::ast::{Attribute, Block, Ident, Item, Mac, MetaItem, MetaItemKind, ItemKind};
+use syntax::ast::{Attribute, Block, Expr, ExprKind, Ident, Item, ItemKind, Mac,
+                  MetaItem, MetaItemKind};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
-use syntax::ext::expand::expand_item;
+use syntax::ext::expand::{expand_expr, expand_item};
 use syntax::feature_gate::AttributeType;
 use syntax::parse::token;
 use syntax::util::small_vector::SmallVector;
@@ -43,7 +44,7 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
             fold::noop_fold_item(item, self)
         }
     }
-    
+
     fn fold_item_simple(&mut self, i: Item) -> Item {
         fn is_flame_annotation(attr: &Attribute) -> bool {
             if let MetaItemKind::Word(ref name) = attr.node.value.node {
@@ -73,7 +74,16 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
             }).unwrap()
         })
     }
-    
+
+    fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
+        if let ExprKind::Mac(_) = expr.node {
+            expand_expr(expr.unwrap(), &mut self.cx.expander()).map(|e|
+                fold::noop_fold_expr(e, self))
+        } else {
+            expr
+        }
+    }
+
     fn fold_mac(&mut self, mac: Mac) -> Mac {
         mac
     }
