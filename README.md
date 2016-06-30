@@ -36,20 +36,20 @@ flamer = { version = "*", optional = true }
 
 [features]
 default = []
-flamer = ["flame", "flamer"]
+use_flamer = ["flame", "flamer"]
 ```
 
 And your crate root should contain:
 
 ```rust
-#![cfg_attr(feature="flamer", feature(plugin))]
-#![cfg_attr(feature="flamer", plugin(flamer))]
+#![cfg_attr(feature="use_flamer", feature(plugin))]
+#![cfg_attr(feature="use_flamer", plugin(flamer))]
 
-#[cfg(feature="flamer")
+#[cfg(feature="use_flamer")
 extern crate flame;
 
 // as well as the following instead of `#[flame]`
-#[cfg_attr(feature="flamer", flame)];
+#[cfg_attr(feature="use_flamer", flame)];
 ```
 
 You should then be able to annotate every item (or even the whole crate) with 
