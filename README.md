@@ -45,7 +45,7 @@ And your crate root should contain:
 #![cfg_attr(feature="use_flamer", feature(plugin))]
 #![cfg_attr(feature="use_flamer", plugin(flamer))]
 
-#[cfg(feature="use_flamer")
+#[cfg(feature="use_flamer")]
 extern crate flame;
 
 // as well as the following instead of `#[flame]`
