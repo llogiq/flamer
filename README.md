@@ -49,7 +49,7 @@ And your crate root should contain:
 extern crate flame;
 
 // as well as the following instead of `#[flame]`
-#[cfg_attr(feature="use_flamer", flame)];
+#[cfg_attr(feature="use_flamer", flame)]
 ```
 
 You should then be able to annotate every item (or even the whole crate) with 
