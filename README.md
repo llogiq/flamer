@@ -14,8 +14,8 @@ In your Cargo.toml add `flame` and `flamer` to your dependencies:
 
 ```toml
 [dependencies]
-flame = "*"
-flamer = "*"
+flame = "^0.1.2"
+flamer = "^0.1.2"
 ```
 
 Then in your crate root, add the following:
@@ -31,25 +31,25 @@ You may also opt for an *optional dependency*. In that case your Cargo.toml shou
 
 ```toml
 [dependencies]
-flame = { version = "*", optional = true }
-flamer = { version = "*", optional = true }
+flame = { version = "^0.1.2", optional = true }
+flamer = { version = "^0.1.2", optional = true }
 
 [features]
 default = []
-flamer = ["flame", "flamer"]
+flame_it = ["flame", "flamer"]
 ```
 
 And your crate root should contain:
 
 ```rust
-#![cfg_attr(feature="flamer", feature(plugin))]
-#![cfg_attr(feature="flamer", plugin(flamer))]
+#![cfg_attr(feature="flame_it", feature(plugin))]
+#![cfg_attr(feature="flame_it", plugin(flamer))]
 
-#[cfg(feature="flamer")
+#[cfg(feature="flame_it")
 extern crate flame;
 
 // as well as the following instead of `#[flame]`
-#[cfg_attr(feature="flamer", flame)];
+#[cfg_attr(feature="flame_it", flame)];
 ```
 
 You should then be able to annotate every item (or even the whole crate) with 
