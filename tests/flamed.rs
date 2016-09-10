@@ -1,4 +1,4 @@
-#![feature(plugin)]
+#![feature(plugin, custom_attribute)]
 #![plugin(flamer)]
 #![flame]
 

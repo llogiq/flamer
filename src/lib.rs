@@ -1,4 +1,4 @@
-#![feature(plugin_registrar, quote, rustc_private)]
+#![feature(plugin_registrar, quote, rustc_private, custom_attribute)]
 
 extern crate rustc_plugin;
 extern crate syntax;
@@ -11,7 +11,6 @@ use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
-use syntax::ext::expand::{expand_expr, expand_item};
 use syntax::feature_gate::AttributeType;
 use syntax::parse::token;
 use syntax::util::small_vector::SmallVector;
@@ -36,7 +35,7 @@ struct Flamer<'a, 'cx: 'a> {
 impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
     fn fold_item(&mut self, item: P<Item>) -> SmallVector<P<Item>> {
         if let ItemKind::Mac(_) = item.node {
-            let expanded = expand_item(item, &mut self.cx.expander());
+            let expanded = self.cx.expander().fold_item(item);
             expanded.into_iter()
                     .flat_map(|i| fold::noop_fold_item(i, self).into_iter())
                     .collect()
@@ -77,8 +76,8 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
 
     fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
         if let ExprKind::Mac(_) = expr.node {
-            expand_expr(expr.unwrap(), &mut self.cx.expander()).map(|e|
-                fold::noop_fold_expr(e, self))
+            self.cx.expander().fold_expr(expr)
+                              .map(|e| fold::noop_fold_expr(e, self))
         } else {
             expr
         }

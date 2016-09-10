@@ -1,6 +1,6 @@
 // test double attrs
 
-#![feature(plugin)]
+#![feature(plugin, custom_attribute)]
 #![plugin(flamer)]
 #![flame]
 
@@ -23,7 +23,7 @@ fn c() {
 #[test]
 fn main() {
     c();
-    let frames = flame::frames();
+    let frames = flame::spans();
     assert_eq!(1, frames.len());
     let roots = &frames[0].roots;
     println!("{:?}",roots);

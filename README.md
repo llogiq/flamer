@@ -1,11 +1,11 @@
-A plugin to insert appropriate `flame::start_guard(_)` calls (for use with 
+A plugin to insert appropriate `flame::start_guard(_)` calls (for use with
 [flame](https://github.com/TyOverby/flame))
 
-[![Build Status](https://travis-ci.org/llogiq/flamer.svg)](https://travis-ci.org/llogiq/flamer) 
+[![Build Status](https://travis-ci.org/llogiq/flamer.svg)](https://travis-ci.org/llogiq/flamer)
 [![Current Version](https://img.shields.io/crates/v/flamer.svg)](https://crates.io/crates/flamer)
 
-**This needs a nightly rustc!** Because flamer is a compiler plugin, it uses 
-unstable APIs, which are not available on stable or beta. It may be possible to 
+**This needs a nightly rustc!** Because flamer is a compiler plugin, it uses
+unstable APIs, which are not available on stable or beta. It may be possible to
 extend flamer to allow use with syntex, but this hasn't been tried yet.
 
 Usage:
@@ -21,7 +21,7 @@ flamer = "^0.1.2"
 Then in your crate root, add the following:
 
 ```rust
-#![feature(plugin)]
+#![feature(plugin, custom_attribute)]
 #![plugin(flamer)]
 
 extern crate flame;
@@ -42,7 +42,7 @@ flame_it = ["flame", "flamer"]
 And your crate root should contain:
 
 ```rust
-#![cfg_attr(feature="flame_it", feature(plugin))]
+#![cfg_attr(feature="flame_it", feature(plugin, custom_attribute))]
 #![cfg_attr(feature="flame_it", plugin(flamer))]
 
 #[cfg(feature="flame_it")
@@ -52,9 +52,9 @@ extern crate flame;
 #[cfg_attr(feature="flame_it", flame)];
 ```
 
-You should then be able to annotate every item (or even the whole crate) with 
-`#[flame]` annotations. You can also use `#[noflame]` annotations to disable 
-instrumentations for subitems of `#[flame]`d items. Note that this only 
+You should then be able to annotate every item (or even the whole crate) with
+`#[flame]` annotations. You can also use `#[noflame]` annotations to disable
+instrumentations for subitems of `#[flame]`d items. Note that this only
 instruments the annotated methods, it does not print out the results.
 
 Refer to flame's documentation to see how output works.
