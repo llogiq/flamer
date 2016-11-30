@@ -12,7 +12,7 @@ use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
 use syntax::feature_gate::AttributeType;
-use syntax::parse::token;
+use syntax::symbol::Symbol;
 use syntax::util::small_vector::SmallVector;
 
 pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
@@ -90,7 +90,7 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
 
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_syntax_extension(token::intern("flame"),
+    reg.register_syntax_extension(Symbol::intern("flame"),
         SyntaxExtension::MultiModifier(Box::new(insert_flame_guard)));
     reg.register_attribute(String::from("noflame"), AttributeType::Whitelisted);
 }
