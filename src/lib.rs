@@ -64,7 +64,7 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
 
     fn fold_block(&mut self, block: P<Block>) -> P<Block> {
         block.map(|block| {
-            let name = self.cx.expr_str(DUMMY_SP, self.ident.name.as_str());
+            let name = self.cx.expr_str(DUMMY_SP, self.ident.name);
             quote_block!(self.cx, {
                 let g = ::flame::start_guard($name);
                 let r = $block;
