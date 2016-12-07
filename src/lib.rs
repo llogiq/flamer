@@ -48,7 +48,8 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
         fn is_flame_annotation(attr: &Attribute) -> bool {
             match attr.value.node {
                 MetaItemKind::Word => {
-                    attr.value.name.as_str() == "flame"
+                    let name = &*attr.value.name.as_str();
+                    name == "flame" || name == "noflame"
                 },
                 _ => false
             }
