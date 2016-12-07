@@ -46,10 +46,11 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
 
     fn fold_item_simple(&mut self, i: Item) -> Item {
         fn is_flame_annotation(attr: &Attribute) -> bool {
-            if let MetaItemKind::Word(ref name) = attr.value.node {
-                name == "flame" || name == "noflame"
-            } else {
-                false
+            match attr.value.node {
+                MetaItemKind::Word => {
+                    attr.value.name.as_str() == "flame"
+                },
+                _ => false
             }
         }
         // don't double-flame nested annotations
