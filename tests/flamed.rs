@@ -32,8 +32,8 @@ fn a() -> u32 {
 #[test]
 fn test_flame() {
     assert_eq!(459, a());
-    let frames = flame::frames();
-    assert_eq!(1, frames.len());
-    let roots = &frames[0].roots;
-    assert_eq!(1, roots.len());
+    let spans = flame::spans();
+    assert_eq!(1, spans.len());
+    let roots = &spans[0];
+    assert_eq!(3, roots.children.len());
 }

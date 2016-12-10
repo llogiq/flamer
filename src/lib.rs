@@ -58,7 +58,7 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
         if i.attrs.iter().any(is_flame_annotation) { return i; }
         if let ItemKind::Mac(_) = i.node {
             return i;
-        }else {
+        } else {
             self.ident = i.ident; // update in case of nested items
             fold::noop_fold_item_simple(i, self)
         }
