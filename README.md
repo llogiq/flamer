@@ -3,6 +3,7 @@ A plugin to insert appropriate `flame::start_guard(_)` calls (for use with
 
 [![Build Status](https://travis-ci.org/llogiq/flamer.svg)](https://travis-ci.org/llogiq/flamer)
 [![Current Version](https://img.shields.io/crates/v/flamer.svg)](https://crates.io/crates/flamer)
+[![Docs](https://docs.rs/flamer/badge.svg)](https://docs.rs/flamer)
 
 **This needs a nightly rustc!** Because flamer is a compiler plugin, it uses
 unstable APIs, which are not available on stable or beta. It may be possible to

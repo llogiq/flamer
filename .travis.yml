@@ -2,20 +2,5 @@ language: rust
 rust: nightly
 sudo: false
 cache: cargo
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-before_script:
-  - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$PATH
 script:
-  - cargo test && cargo doc
-after_success:
-  - travis-cargo doc-upload
-env:
-  global:
-    secure: hLewt4f9Jh4vXLiLu31NoemdoEjJkM1f8tD0FzjYaUBTOlQUcFzkvjaWn7dHeRHEoizE3ZlWonrnJvqLBZuLgUjJCbl7WPoHolz30e3DbhNNNA8TCl3wdTPQW9dKCge+1Z+yRmulqGI3ThWikMTfIqRW2tK1hLHdly/v1D/m9bXbYMmb6G7/URuaBUIDMnOHY2/+/OewRfY31/ELXcjMNL6V+OCJcF93/+HdyTlNqLi8U8s/L1YjQEix1RdUVhPDZl337GOLxlQEBBab8/OcjqNXqNKi+VMIrlIQEy+88jV7qGf/d2Azm20xw12wcYRHHI1LvFnH+PEiHQP31TxZ5YyayHEWa9ZBZO6cCKjrYj6t5lcDI1vOf4aY6EUX+aYwqiAkjaFoh1+7TJOAadTcNOd29nO+lEn88VpctRCaHyiDTX+lJwdSNxBQAKx6bqvJIC/nyIYZuXJNECBV+vWzyWi5dUrgTrdB7brm4GV2g5GeMZuT2yD4kTG3+ekdAb7CnOVSeQZ4fZCnnisRM2x2vfHsPwUo3HmtbmPbnQ6iUL913Zyt6EOv7yQfHtGq5BKspgZkmi+l5naYDtqniEqsuNJFLJntrRPbXnXWx4PdXz6sfjL/8kbYVmNZXtWvlMbUPo1mM4NgElo2NTQDK2ggfywNXDdI9hZBPcWQQ9XgCgA=
+  - cargo test
