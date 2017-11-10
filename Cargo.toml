@@ -12,4 +12,4 @@ keywords = ["flame-graph", "profiling", "compiler-plugin"]
 plugin = true
 
 [dependencies]
-flame = "^0.1.9"
+flame = "^0.2"
