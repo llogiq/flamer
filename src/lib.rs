@@ -67,7 +67,7 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
                 let r = $block;
                 g.end();
                 r
-            }).unwrap()
+            }).into_inner()
         })
     }
 
