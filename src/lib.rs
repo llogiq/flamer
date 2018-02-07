@@ -5,10 +5,10 @@ extern crate syntax;
 
 use rustc_plugin::registry::Registry;
 use syntax::ast::{Attribute, Block, Expr, ExprKind, Ident, Item, ItemKind, Mac,
-                  MetaItem};
+                  MetaItem, Constness};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
-use syntax::codemap::{DUMMY_SP, Span};
+use syntax::codemap::{DUMMY_SP, Span, Spanned};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
 use syntax::feature_gate::AttributeType;
@@ -51,6 +51,12 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
         }
         // don't double-flame nested annotations
         if i.attrs.iter().any(is_flame_annotation) { return i; }
+
+        // don't flame constant functions
+        if let ItemKind::Fn(_, _, Spanned{ node: Constness::Const, .. }, ..) = i.node {
+            return i;
+        }
+
         if let ItemKind::Mac(_) = i.node {
             return i;
         } else {
