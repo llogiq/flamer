@@ -66,13 +66,15 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
     }
 
     fn fold_block(&mut self, block: P<Block>) -> P<Block> {
+        match block.stmts.last().map(|l| &l.node) {
+            Some(&StmtKind::Expr(_)) => true,
+            Some(&StmtKind::Semi(ref expr)
+        }
         block.map(|block| {
             let name = self.cx.expr_str(DUMMY_SP, self.ident.name);
             quote_block!(self.cx, {
-                let g = ::flame::start_guard($name);
-                let r = $block;
-                g.end();
-                r
+                let _name = ::flame::start_guard($name);
+                $block;
             }).into_inner()
         })
     }

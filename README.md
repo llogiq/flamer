@@ -15,7 +15,7 @@ In your Cargo.toml add `flame` and `flamer` to your dependencies:
 
 ```toml
 [dependencies]
-flame = "0.2.0""
+flame = "0.2.0"
 flamer = "^0.2.0"
 ```
 
