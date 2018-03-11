@@ -26,6 +26,9 @@ Then in your crate root, add the following:
 #![plugin(flamer)]
 
 extern crate flame;
+
+#[flame]
+// The item to apply `flame` to goes here.
 ```
 
 You may also opt for an *optional dependency*. In that case your Cargo.toml should have:
@@ -50,7 +53,8 @@ And your crate root should contain:
 extern crate flame;
 
 // as well as the following instead of `#[flame]`
-#[cfg_attr(feature="flame_it", flame)];
+#[cfg_attr(feature="flame_it", flame)]
+// The item to apply `flame` to goes here.
 ```
 
 You should then be able to annotate every item (or even the whole crate) with
