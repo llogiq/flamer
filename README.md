@@ -15,8 +15,8 @@ In your Cargo.toml add `flame` and `flamer` to your dependencies:
 
 ```toml
 [dependencies]
-flame = "0.2.0"
-flamer = "^0.2.0"
+flame = "0.2.2"
+flamer = "^0.2.1"
 ```
 
 Then in your crate root, add the following:
@@ -35,8 +35,8 @@ You may also opt for an *optional dependency*. In that case your Cargo.toml shou
 
 ```toml
 [dependencies]
-flame = { version = "0.2.0", optional = true }
-flamer = { version = "^0.2.0", optional = true }
+flame = { version = "0.2.2", optional = true }
+flamer = { version = "^0.2.1", optional = true }
 
 [features]
 default = []
@@ -62,6 +62,6 @@ You should then be able to annotate every item (or even the whole crate) with
 instrumentations for subitems of `#[flame]`d items. Note that this only
 instruments the annotated methods, it does not print out the results.
 
-Refer to flame's documentation to see how output works.
+Refer to [flame's documentation](https://docs.rs/flame) to see how output works.
 
 License: Apache 2.0
