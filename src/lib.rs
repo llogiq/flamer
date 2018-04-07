@@ -21,9 +21,10 @@ pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
         Annotatable::Item(i) => Annotatable::Item(
             Flamer { cx: cx, ident: i.ident }.fold_item(i).expect_one("expected exactly one item")),
         Annotatable::TraitItem(i) => Annotatable::TraitItem(
-            i.map(|i| Flamer { cx: cx, ident: i.ident }.fold_trait_item(i).expect_one("expected exactly one item"))),
+            i.map(|i| Flamer { cx, ident: i.ident }.fold_trait_item(i).expect_one("expected exactly one item"))),
         Annotatable::ImplItem(i) => Annotatable::ImplItem(
-            i.map(|i| Flamer { cx: cx, ident: i.ident }.fold_impl_item(i).expect_one("expected exactly one item"))),
+            i.map(|i| Flamer { cx, ident: i.ident }.fold_impl_item(i).expect_one("expected exactly one item"))),
+        a => a
     }
 }
 
