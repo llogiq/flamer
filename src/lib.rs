@@ -47,8 +47,8 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
 
     fn fold_item_simple(&mut self, i: Item) -> Item {
         fn is_flame_annotation(attr: &Attribute) -> bool {
-            attr.name().map_or(false, |name|
-                    name == "flame" || name == "noflame")
+            let name = attr.name();
+            name == "flame" || name == "noflame"
         }
         // don't double-flame nested annotations
         if i.attrs.iter().any(is_flame_annotation) { return i; }
