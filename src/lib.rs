@@ -8,7 +8,7 @@ use syntax::ast::{Attribute, Block, Expr, ExprKind, Ident, Item, ItemKind, Mac,
                   MetaItem, Constness};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
-use syntax::codemap::{DUMMY_SP, Span, Spanned};
+use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
 use syntax::feature_gate::AttributeType;
@@ -54,9 +54,10 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
         if i.attrs.iter().any(is_flame_annotation) { return i; }
 
         // don't flame constant functions
-        if let ItemKind::Fn(_, _, Spanned{ node: Constness::Const, .. }, ..) = i.node {
-            return i;
-        }
+        let is_const = if let ItemKind::Fn(_, ref header, ..) = i.node {
+            header.constness.node == Constness::Const
+        } else { false };
+        if is_const { return i; }
 
         if let ItemKind::Mac(_) = i.node {
             return i;

@@ -16,7 +16,7 @@ In your Cargo.toml add `flame` and `flamer` to your dependencies:
 ```toml
 [dependencies]
 flame = "0.2.2"
-flamer = "^0.2.2"
+flamer = "^0.2.3"
 ```
 
 Then in your crate root, add the following:
@@ -36,7 +36,7 @@ You may also opt for an *optional dependency*. In that case your Cargo.toml shou
 ```toml
 [dependencies]
 flame = { version = "0.2.2", optional = true }
-flamer = { version = "^0.2.2", optional = true }
+flamer = { version = "^0.2.3", optional = true }
 
 [features]
 default = []
