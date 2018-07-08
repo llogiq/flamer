@@ -1,16 +1,17 @@
-// test double attrs
+// test optional prefix
 
 #![feature(plugin, custom_attribute)]
 #![plugin(flamer)]
-#![flame("e")]
 
 extern crate flame;
 
-#[flame]
+#[flame("top")]
 fn a() {
-    // nothing to do here
+    let l = Lower {};
+    l.a();
 }
 
+#[flame]
 fn b() {
     a()
 }
@@ -18,6 +19,17 @@ fn b() {
 #[noflame]
 fn c() {
     b()
+}
+
+pub struct Lower {
+    
+}
+
+impl Lower {
+    #[flame("lower")]
+    pub fn a(self) {
+        // nothing to do here
+    }
 }
 
 #[test]
@@ -29,7 +41,9 @@ fn main() {
     println!("{:?}",roots);
     // if more than 2 roots, a() was flamed twice or c was flamed
     // main is missing because main isn't closed here
-    assert_eq!("e::b", roots.name);
+    assert_eq!("b", roots.name);
     assert_eq!(1, roots.children.len());
-    assert_eq!("a", roots.children[0].name);
+    assert_eq!("top::a", roots.children[0].name);
+    assert_eq!(1, roots.children[0].children.len());
+    assert_eq!("lower::a", roots.children[0].children[0].name);
 }
