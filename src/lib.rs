@@ -5,7 +5,7 @@ extern crate syntax;
 
 use rustc_plugin::registry::Registry;
 use syntax::ast::{Attribute, Block, Expr, ExprKind, Ident, Item, ItemKind, Mac,
-                  MetaItem, Constness};
+                  MetaItem, Constness, MetaItemKind, LitKind};
 use syntax::fold::{self, Folder};
 use syntax::ptr::P;
 use syntax::codemap::{DUMMY_SP, Span};
@@ -15,15 +15,32 @@ use syntax::feature_gate::AttributeType;
 use syntax::symbol::Symbol;
 use syntax::util::small_vector::SmallVector;
 
-pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
+pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, mi: &MetaItem,
                           a: Annotatable) -> Annotatable {
+    let opt_ident = match mi.node {
+        MetaItemKind::Word => None,
+        MetaItemKind::List(ref v) => {
+            if v.len() != 1 {
+                None
+            } else {
+                match v.get(0).unwrap().literal() {
+                    None => None,
+                    Some(l) => match l.node {
+                        LitKind::Str(s, _style) => Some(s),
+                        _ => None,
+                    }
+                }
+            }
+        },
+        MetaItemKind::NameValue(_) => None,
+    };
     match a {
         Annotatable::Item(i) => Annotatable::Item(
-            Flamer { cx: cx, ident: i.ident }.fold_item(i).expect_one("expected exactly one item")),
+            Flamer { cx: cx, ident: i.ident, opt_ident: opt_ident }.fold_item(i).expect_one("expected exactly one item")),
         Annotatable::TraitItem(i) => Annotatable::TraitItem(
-            i.map(|i| Flamer { cx, ident: i.ident }.fold_trait_item(i).expect_one("expected exactly one item"))),
+            i.map(|i| Flamer { cx, ident: i.ident, opt_ident: opt_ident }.fold_trait_item(i).expect_one("expected exactly one item"))),
         Annotatable::ImplItem(i) => Annotatable::ImplItem(
-            i.map(|i| Flamer { cx, ident: i.ident }.fold_impl_item(i).expect_one("expected exactly one item"))),
+            i.map(|i| Flamer { cx, ident: i.ident, opt_ident: opt_ident }.fold_impl_item(i).expect_one("expected exactly one item"))),
         a => a
     }
 }
@@ -31,6 +48,7 @@ pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
 struct Flamer<'a, 'cx: 'a> {
     ident: Ident,
     cx: &'a mut ExtCtxt<'cx>,
+    opt_ident: Option<Symbol>,
 }
 
 impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
@@ -70,10 +88,18 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
     fn fold_block(&mut self, block: P<Block>) -> P<Block> {
         block.map(|block| {
             let name = self.cx.expr_str(DUMMY_SP, self.ident.name);
-            quote_block!(self.cx, {
-                let _name = ::flame::start_guard($name);
-                $block
-            }).into_inner()
+            if let Some(opt_name) = self.opt_ident {
+                let prefix = self.cx.expr_str(DUMMY_SP, opt_name);
+                quote_block!(self.cx, {
+                    let _name = ::flame::start_guard(format!("{}::{}", $prefix, $name));
+                    $block
+                }).into_inner()
+            } else {
+                quote_block!(self.cx, {
+                    let _name = ::flame::start_guard($name);
+                    $block
+                }).into_inner()
+            }
         })
     }
 
