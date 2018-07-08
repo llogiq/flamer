@@ -66,7 +66,7 @@ The `flame` annotation can also take an optional parameter specifying a string
 to prefix to enclosed method names. This is especially useful when annotating
 multiple methods with the same name, but in different modules.
 
-```
+```rust
 #[flame("prefix")]
 fn method_name() {
     //The corresponding block on the flamegraph will be named "prefix::method_name"
