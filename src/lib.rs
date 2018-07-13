@@ -68,12 +68,16 @@ impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
     }
 
     fn fold_block(&mut self, block: P<Block>) -> P<Block> {
-        block.map(|block| {
+        block.map(|mut block| {
             let name = self.cx.expr_str(DUMMY_SP, self.ident.name);
-            quote_block!(self.cx, {
-                let _name = ::flame::start_guard($name);
-                $block
-            }).into_inner()
+            let ident = self.cx.ident_of("_name");
+            let path = self.cx.path_global(DUMMY_SP,
+                    vec![self.cx.ident_of("flame"), self.cx.ident_of("start_guard")]);
+            let guard_path = self.cx.expr_path(path);
+            let guard_call = self.cx.expr_call(DUMMY_SP, guard_path, vec![name]);
+            let guard_stmt = self.cx.stmt_let(DUMMY_SP, false, ident, guard_call);
+            block.stmts.insert(0, guard_stmt);
+            block
         })
     }
 
