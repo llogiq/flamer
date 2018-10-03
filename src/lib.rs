@@ -22,20 +22,16 @@ pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, mi: &MetaItem,
                           a: Annotatable) -> Annotatable {
     let opt_ident = match mi.node {
         MetaItemKind::Word => None,
-        MetaItemKind::List(ref v) => {
-            if v.len() != 1 {
-                None
-            } else {
-                match v.get(0).unwrap().literal() {
-                    None => None,
-                    Some(l) => match l.node {
-                        LitKind::Str(s, _style) => Some(s),
-                        _ => None,
-                    }
+        MetaItemKind::List(ref v) if v.len() == 1 => {
+            match v.get(0).unwrap().literal() {
+                None => None,
+                Some(l) => match l.node {
+                    LitKind::Str(s, _style) => Some(s),
+                    _ => None,
                 }
             }
         },
-        MetaItemKind::NameValue(_) => None,
+        _ => None,
     };
     match a {
         Annotatable::Item(i) => Annotatable::Item(

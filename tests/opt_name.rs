@@ -21,9 +21,7 @@ fn c() {
     b()
 }
 
-pub struct Lower {
-    
-}
+pub struct Lower;
 
 impl Lower {
     #[flame("lower")]
