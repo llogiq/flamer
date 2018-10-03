@@ -1,6 +1,6 @@
 [package]
 name = "flamer"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["Andre Bogus <bogusandre@gmail.com>"]
 description = "a procedural macro to insert `flame::start_guard(_)` calls"
 license = "Apache-2.0"
