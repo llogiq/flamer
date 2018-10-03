@@ -3,6 +3,7 @@
 extern crate rustc_plugin;
 extern crate syntax;
 extern crate rustc_data_structures;
+extern crate smallvec;
 
 use rustc_plugin::registry::Registry;
 use syntax::ast::{Attribute, Block, Expr, ExprKind, Ident, Item, ItemKind, Mac,
@@ -14,7 +15,8 @@ use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
 use syntax::ext::build::AstBuilder;
 use syntax::feature_gate::AttributeType;
 use syntax::symbol::Symbol;
-use rustc_data_structures::small_vec::{ExpectOne, OneVector};
+use syntax::fold::ExpectOne;
+use smallvec::SmallVec;
 
 pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, _mi: &MetaItem,
                           a: Annotatable) -> Annotatable {
@@ -35,7 +37,7 @@ struct Flamer<'a, 'cx: 'a> {
 }
 
 impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
-    fn fold_item(&mut self, item: P<Item>) -> OneVector<P<Item>> {
+    fn fold_item(&mut self, item: P<Item>) -> SmallVec<[P<Item>; 1]> {
         if let ItemKind::Mac(_) = item.node {
             let expanded = self.cx.expander().fold_item(item);
             expanded.into_iter()
