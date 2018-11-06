@@ -1,15 +1,18 @@
 [package]
 name = "flamer"
-version = "0.2.5"
+version = "0.3.0"
 authors = ["Andre Bogus <bogusandre@gmail.com>"]
 description = "a procedural macro to insert `flame::start_guard(_)` calls"
 license = "Apache-2.0"
 repository = "https://github.com/llogiq/flamer"
 readme = "README.md"
 keywords = ["flame-graph", "profiling", "compiler-plugin"]
+exclude = [".travis.yml"]
 
 [lib]
-plugin = true
+proc_macro = true
 
 [dependencies]
 flame = "0.2.2"
+syn = { version = "0.15.18", features = ["extra-traits", "full", "fold", "parsing"] }
+quote = "0.6.9"

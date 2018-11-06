@@ -1,33 +1,44 @@
-#![feature(plugin, custom_attribute)]
-#![plugin(flamer)]
-#![flame]
+#![feature(custom_inner_attributes, proc_macro_hygiene)]
+
+#[macro_use] extern crate flamer;
 
 extern crate flame;
 
-fn e() -> u32 {
-    2
-}
-
-fn d() -> u32 {
-    e() << e()
-}
-
-fn c() -> u32 {
-    d() * d() * d() - 1
-}
-
-fn b() -> u32 {
-    (0..3).map(|_| c()).fold(0, |x, y| x + y)
-}
-
-fn a() -> u32 {
-    let mut result = 0;
-    for _ in 0..3 {
-        result += b()
+#[flame]
+mod inner {
+    fn e() -> u32 {
+        2
     }
-    result / 10
+
+    fn d() -> u32 {
+        e() << e()
+    }
+
+    fn c() -> u32 {
+        d() * d() * d() - 1
+    }
+
+    fn b() -> u32 {
+        (0..3).map(|_| c()).fold(0, |x, y| x + y)
+    }
+
+    pub fn a() -> u32 {
+        let mut result = 0;
+        for _ in 0..3 {
+            result += b()
+        }
+        result / 10
+    }
+
+    #[noflame]
+    #[allow(unused)]
+    mod flamed {
+        pub fn id() {
+        }
+    }
 }
 
+use inner::*;
 
 #[test]
 fn test_flame() {
