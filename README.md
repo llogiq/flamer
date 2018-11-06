@@ -16,14 +16,14 @@ In your Cargo.toml add `flame` and `flamer` to your dependencies:
 ```toml
 [dependencies]
 flame = "0.2.2"
-flamer = "^0.2.3"
+flamer = "0.3"
 ```
 
 Then in your crate root, add the following:
 
 ```rust
-#![feature(plugin, custom_attribute)]
-#![plugin(flamer)]
+#![feature(proc_macro_hygiene)]
+#[macro_use] extern crate flamer;
 
 extern crate flame;
 
@@ -36,7 +36,7 @@ You may also opt for an *optional dependency*. In that case your Cargo.toml shou
 ```toml
 [dependencies]
 flame = { version = "0.2.2", optional = true }
-flamer = { version = "^0.2.3", optional = true }
+flamer = { version = "0.3", optional = true }
 
 [features]
 default = []
@@ -46,8 +46,10 @@ flame_it = ["flame", "flamer"]
 And your crate root should contain:
 
 ```rust
-#![cfg_attr(feature="flame_it", feature(plugin, custom_attribute))]
-#![cfg_attr(feature="flame_it", plugin(flamer))]
+#![cfg_attr(feature="flame_it", feature(proc_macro_hygiene))]
+
+#[cfg(feature="flame_it")]
+#[macro_use] extern crate flamer;
 
 #[cfg(feature="flame_it")]
 extern crate flame;
@@ -55,12 +57,13 @@ extern crate flame;
 // as well as the following instead of `#[flame]`
 #[cfg_attr(feature="flame_it", flame)]
 // The item to apply `flame` to goes here.
+mod flamed_module { .. }
 ```
 
-You should then be able to annotate every item (or even the whole crate) with
-`#[flame]` annotations. You can also use `#[noflame]` annotations to disable
-instrumentations for subitems of `#[flame]`d items. Note that this only
-instruments the annotated methods, it does not print out the results.
+You should then be able to annotate every item (alas, currently not the whole
+crate) with `#[flame]` annotations. You can also use `#[noflame]` annotations
+to disable instrumentations for subitems of `#[flame]`d items. Note that this
+only instruments the annotated methods, it does not print out the results.
 
 The `flame` annotation can also take an optional parameter specifying a string
 to prefix to enclosed method names. This is especially useful when annotating

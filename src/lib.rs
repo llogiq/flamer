@@ -1,124 +1,145 @@
-#![feature(plugin_registrar, rustc_private, custom_attribute)]
+//! A procedural attribute-macro to insert `flame` calls into code
+//!
+//! You can annotate modules or functions with `#[flame]` (currently you cannot
+//! annotate the whole crate, alas). You can also annotate modules, functions
+//! or other items with `#[noflame]` to omit them from the flame tracing.
 
-extern crate rustc_plugin;
-extern crate syntax;
-extern crate rustc_data_structures;
-extern crate smallvec;
+extern crate syn;
+extern crate quote;
+extern crate proc_macro;
 
-use rustc_plugin::registry::Registry;
-use syntax::ast::{Attribute, Block, Expr, ExprKind, Ident, Item, ItemKind, Mac,
-                  MetaItem, Constness, MetaItemKind, LitKind};
-use syntax::fold::{self, Folder};
-use syntax::ptr::P;
-use syntax::source_map::{DUMMY_SP, Span};
-use syntax::ext::base::{Annotatable, ExtCtxt, SyntaxExtension};
-use syntax::ext::build::AstBuilder;
-use syntax::feature_gate::AttributeType;
-use syntax::symbol::Symbol;
-use syntax::fold::ExpectOne;
-use smallvec::SmallVec;
+use self::proc_macro::TokenStream;
+use quote::quote;
+use syn::fold::{self, Fold};
+use syn::parse::{Parse, ParseStream, Result};
+use syn::punctuated::Punctuated;
 
-pub fn insert_flame_guard(cx: &mut ExtCtxt, _span: Span, mi: &MetaItem,
-                          a: Annotatable) -> Annotatable {
-    let opt_ident = match mi.node {
-        MetaItemKind::Word => None,
-        MetaItemKind::List(ref v) if v.len() == 1 => {
-            match v.get(0).unwrap().literal() {
-                None => None,
-                Some(l) => match l.node {
-                    LitKind::Str(s, _style) => Some(s),
-                    _ => None,
-                }
-            }
-        },
-        _ => None,
-    };
-    match a {
-        Annotatable::Item(i) => Annotatable::Item(
-            Flamer { cx: cx, ident: i.ident, opt_ident: opt_ident }.fold_item(i).expect_one("expected exactly one item")),
-        Annotatable::TraitItem(i) => Annotatable::TraitItem(
-            i.map(|i| Flamer { cx, ident: i.ident, opt_ident: opt_ident }.fold_trait_item(i).expect_one("expected exactly one item"))),
-        Annotatable::ImplItem(i) => Annotatable::ImplItem(
-            i.map(|i| Flamer { cx, ident: i.ident, opt_ident: opt_ident }.fold_impl_item(i).expect_one("expected exactly one item"))),
-        a => a
-    }
+use syn::{parse_macro_input, parse_quote, Attribute, ImplItemMethod, Item,
+          ItemFn, ItemImpl, ItemMod, ItemTrait, TraitItemMethod, Token};
+
+#[derive(Default)]
+struct Flamer {
+    id_stack: Vec<String>,
 }
 
-struct Flamer<'a, 'cx: 'a> {
-    ident: Ident,
-    cx: &'a mut ExtCtxt<'cx>,
-    opt_ident: Option<Symbol>,
-}
-
-impl<'a, 'cx> Folder for Flamer<'a, 'cx> {
-    fn fold_item(&mut self, item: P<Item>) -> SmallVec<[P<Item>; 1]> {
-        if let ItemKind::Mac(_) = item.node {
-            let expanded = self.cx.expander().fold_item(item);
-            expanded.into_iter()
-                    .flat_map(|i| fold::noop_fold_item(i, self).into_iter())
-                    .collect()
-        } else {
-            fold::noop_fold_item(item, self)
-        }
+impl Flamer {
+    fn push(&mut self, ident: String) {
+        self.id_stack.push(ident);
     }
 
-    fn fold_item_simple(&mut self, i: Item) -> Item {
-        fn is_flame_annotation(attr: &Attribute) -> bool {
-            let name = attr.name();
-            name == "flame" || name == "noflame"
-        }
-        // don't double-flame nested annotations
-        if i.attrs.iter().any(is_flame_annotation) { return i; }
-
-        // don't flame constant functions
-        let is_const = if let ItemKind::Fn(_, ref header, ..) = i.node {
-            header.constness.node == Constness::Const
-        } else { false };
-        if is_const { return i; }
-
-        if let ItemKind::Mac(_) = i.node {
-            return i;
-        } else {
-            self.ident = i.ident; // update in case of nested items
-            fold::noop_fold_item_simple(i, self)
-        }
+    fn pop(&mut self) {
+        let _ = self.id_stack.pop();
     }
 
-    fn fold_block(&mut self, block: P<Block>) -> P<Block> {
-        block.map(|mut block| {
-            let name = if let Some(opt_name) = self.opt_ident {
-                self.cx.expr_str(DUMMY_SP, Symbol::intern(format!("{}::{}", opt_name, self.ident.name).as_str()))
-            } else {
-                self.cx.expr_str(DUMMY_SP, self.ident.name)
-            };
-            let ident = self.cx.ident_of("_name");
-            let path = self.cx.path_global(DUMMY_SP,
-                    vec![self.cx.ident_of("flame"), self.cx.ident_of("start_guard")]);
-            let guard_path = self.cx.expr_path(path);
-            let guard_call = self.cx.expr_call(DUMMY_SP, guard_path, vec![name]);
-            let guard_stmt = self.cx.stmt_let(DUMMY_SP, false, ident, guard_call);
-            block.stmts.insert(0, guard_stmt);
-            block
+    fn name(&self) -> String {
+        self.id_stack.join("::")
+    }
+
+    fn is_noflame(&self, i: &[Attribute]) -> bool {
+        i.iter().any(|ref a| if a.path.segments.len() == 1 {
+            let ident = &a.path.segments.iter().next().unwrap().ident;
+            ident == "flame" || ident == "noflame"
+        } else {
+            false
         })
     }
+}
 
-    fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
-        if let ExprKind::Mac(_) = expr.node {
-            self.cx.expander().fold_expr(expr)
-                              .map(|e| fold::noop_fold_expr(e, self))
-        } else {
-            expr
-        }
-    }
-
-    fn fold_mac(&mut self, mac: Mac) -> Mac {
-        mac
+impl Parse for Flamer {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let vars = Punctuated::<syn::LitStr, Token![,]>::parse_terminated(input)?;
+        Ok(Flamer {
+            id_stack: vars.into_iter().map(|s| s.value()).collect::<Vec<_>>(),
+        })
     }
 }
 
-#[plugin_registrar]
-pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_syntax_extension(Symbol::intern("flame"),
-        SyntaxExtension::MultiModifier(Box::new(insert_flame_guard)));
-    reg.register_attribute(String::from("noflame"), AttributeType::Whitelisted);
+impl Fold for Flamer {
+    fn fold_item_mod(&mut self, i: ItemMod) -> ItemMod {
+        if self.is_noflame(&i.attrs) {
+            return i;
+        }
+        self.push(i.ident.to_string());
+        let item_mod = fold::fold_item_mod(self, i);
+        self.pop();
+        item_mod
+    }
+
+    fn fold_item_trait(&mut self, i: ItemTrait) -> ItemTrait {
+        if self.is_noflame(&i.attrs) {
+            return i;
+        }
+        self.push(i.ident.to_string());
+        let t = fold::fold_item_trait(self, i);
+        self.pop();
+        t
+    }
+
+    fn fold_trait_item_method(&mut self, i: TraitItemMethod)
+    -> TraitItemMethod {
+        if i.sig.constness.is_some() || self.is_noflame(&i.attrs) {
+            return i;
+        }
+        self.push(i.sig.ident.to_string());
+        let m = fold::fold_trait_item_method(self, i);
+        self.pop();
+        m
+    }
+
+    fn fold_item_impl(&mut self, i: ItemImpl) -> ItemImpl {
+        if self.is_noflame(&i.attrs) {
+            return i;
+        }
+        if let Some((_, ref path, _)) = i.trait_ {
+            self.push(format!("{:?} as {:?}", &i.self_ty, path));
+        } else {
+            self.push(format!("{:?}", &i.self_ty));
+        }
+        let ii = fold::fold_item_impl(self, i);
+        self.pop();
+        ii
+    }
+
+    fn fold_impl_item_method(&mut self, i: ImplItemMethod) -> ImplItemMethod {
+        if i.sig.constness.is_some() || self.is_noflame(&i.attrs) {
+            return i;
+        }
+        self.push(i.sig.ident.to_string());
+        let method = fold::fold_impl_item_method(self, i);
+        self.pop();
+        method
+    }
+
+    fn fold_item_fn(&mut self, i: ItemFn) -> ItemFn {
+        if self.is_noflame(&i.attrs) {
+            return i;
+        }
+        if i.constness.is_some() {
+            return fold::fold_item_fn(self, i);
+        }
+        let mut i = i;
+        self.push(i.ident.to_string());
+        let name = self.name();
+        let stmts = ::std::mem::replace(&mut i.block.stmts, vec![parse_quote! {
+            let _flame_guard = ::flame::start_guard(#name);
+        }]);
+        for stmt in stmts {
+            i.block.stmts.push(fold::fold_stmt(self, stmt));
+        }
+        self.pop();
+        i
+    }
+}
+
+#[proc_macro_attribute]
+pub fn flame(attrs: TokenStream, code: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(code as Item);
+    let mut flamer = parse_macro_input!(attrs as Flamer);
+    let item = fold::fold_item(&mut flamer, input);
+    TokenStream::from(quote!(#item))
+}
+
+#[proc_macro_attribute]
+pub fn noflame(_attrs: TokenStream, code: TokenStream) -> TokenStream {
+    code
 }

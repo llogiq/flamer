@@ -1,28 +1,29 @@
+#![feature(custom_attribute, proc_macro_hygiene)]
 // test double attrs
 
-#![feature(plugin, custom_attribute)]
-#![plugin(flamer)]
-#![flame]
-
+#[macro_use] extern crate flamer;
 extern crate flame;
 
 #[flame]
-fn a() {
-    // nothing to do here
-}
+mod inner {
+    fn a() {
+        // nothing to do here
+    }
 
-fn b() {
-    a()
-}
+    #[flame]
+    fn b() {
+        a()
+    }
 
-#[noflame]
-fn c() {
-    b()
+    #[noflame]
+    pub fn c() {
+        b()
+    }
 }
 
 #[test]
 fn main() {
-    c();
+    inner::c();
     let spans = flame::spans();
     assert_eq!(1, spans.len());
     let roots = &spans[0];
@@ -31,5 +32,5 @@ fn main() {
     // main is missing because main isn't closed here
     assert_eq!("b", roots.name);
     assert_eq!(1, roots.children.len());
-    assert_eq!("a", roots.children[0].name);
+    assert_eq!("inner::a", roots.children[0].name);
 }

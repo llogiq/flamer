@@ -1,7 +1,7 @@
 // test optional prefix
 
-#![feature(plugin, custom_attribute)]
-#![plugin(flamer)]
+extern crate flamer;
+use flamer::{flame, noflame};
 
 extern crate flame;
 
