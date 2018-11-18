@@ -1,9 +1,12 @@
+//! Test `flamer` usage with const functions and methods.
+
+#![cfg(feature = "test-nightly")]
 #![feature(proc_macro_hygiene)]
 
-extern crate flamer;
-use flamer::flame;
-
 extern crate flame;
+extern crate flamer;
+
+use flamer::flame;
 
 #[flame]
 mod inner {

@@ -1,8 +1,10 @@
-#![feature(custom_inner_attributes, proc_macro_hygiene)]
+//! Test basic `flamer` usage.
 
-#[macro_use] extern crate flamer;
+#![cfg(feature = "test-nightly")]
+#![feature(proc_macro_hygiene)]
 
 extern crate flame;
+#[macro_use] extern crate flamer;
 
 #[flame]
 mod inner {

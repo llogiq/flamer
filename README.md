@@ -1,13 +1,13 @@
-A plugin to insert appropriate `flame::start_guard(_)` calls (for use with
+A proc macro to insert appropriate `flame::start_guard(_)` calls (for use with
 [flame](https://github.com/TyOverby/flame))
 
 [![Build Status](https://travis-ci.org/llogiq/flamer.svg)](https://travis-ci.org/llogiq/flamer)
 [![Current Version](https://img.shields.io/crates/v/flamer.svg)](https://crates.io/crates/flamer)
 [![Docs](https://docs.rs/flamer/badge.svg)](https://docs.rs/flamer)
+![Supported Rust Versions](https://img.shields.io/badge/rustc-1.30+-yellow.svg)
 
-**This needs a nightly rustc!** Because flamer is a compiler plugin, it uses
-unstable APIs, which are not available on stable or beta. It may be possible to
-extend flamer to allow use with syntex, but this hasn't been tried yet.
+**This proc macro requires Rust 1.30.**
+Because flamer is a proc macro attribute, it uses APIs stabilized in Rust 1.30.
 
 Usage:
 
@@ -22,13 +22,26 @@ flamer = "0.3"
 Then in your crate root, add the following:
 
 ```rust
-#![feature(proc_macro_hygiene)]
-#[macro_use] extern crate flamer;
-
 extern crate flame;
+#[macro_use] extern crate flamer;
 
 #[flame]
 // The item to apply `flame` to goes here.
+```
+
+Unfortunately, currently stable Rust doesn't allow custom attributes on modules.
+To use `#[flame]` on modules you need a nightly Rust with
+`#![feature(proc_macro_hygiene)]` in the crate root
+([related issue](https://github.com/rust-lang/rust/issues/54727)):
+
+```rust
+#![feature(proc_macro_hygiene)]
+
+extern crate flame;
+#[macro_use] extern crate flamer;
+
+#[flame]
+mod flamed_module { .. }
 ```
 
 You may also opt for an *optional dependency*. In that case your Cargo.toml should have:
@@ -46,28 +59,45 @@ flame_it = ["flame", "flamer"]
 And your crate root should contain:
 
 ```rust
-#![cfg_attr(feature="flame_it", feature(proc_macro_hygiene))]
-
-#[cfg(feature="flame_it")]
+#[cfg(feature = "flame_it")]
+extern crate flame;
+#[cfg(feature = "flame_it")]
 #[macro_use] extern crate flamer;
 
-#[cfg(feature="flame_it")]
+// as well as the following instead of `#[flame]`
+#[cfg_attr(feature = "flame_it", flame)]
+// The item to apply `flame` to goes here.
+```
+
+For nightly module support, also add
+`#![cfg_attr(feature = "flame_it", feature(proc_macro_hygiene))]` in the crate
+root:
+
+```rust
+#![cfg_attr(feature = "flame_it", feature(proc_macro_hygiene))]
+
+#[cfg(feature = "flame_it")]
 extern crate flame;
+#[cfg(feature = "flame_it")]
+#[macro_use] extern crate flamer;
 
 // as well as the following instead of `#[flame]`
-#[cfg_attr(feature="flame_it", flame)]
-// The item to apply `flame` to goes here.
+#[cfg_attr(feature = "flame_it", flame)]
 mod flamed_module { .. }
 ```
 
 You should then be able to annotate every item (alas, currently not the whole
-crate) with `#[flame]` annotations. You can also use `#[noflame]` annotations
-to disable instrumentations for subitems of `#[flame]`d items. Note that this
-only instruments the annotated methods, it does not print out the results.
+crate; see the
+[custom inner attribute](https://github.com/rust-lang/rust/issues/54726) issue
+for more details) with `#[flame]` annotations.
+You can also use `#[noflame]` annotations to disable instrumentations for
+subitems of `#[flame]`d items. Note that this only instruments the annotated
+methods, it does not print out the results.
 
 The `flame` annotation can also take an optional parameter specifying a string
-to prefix to enclosed method names. This is especially useful when annotating
-multiple methods with the same name, but in different modules.
+to prefix to enclosed method names.
+This is especially useful when annotating multiple methods with the same name,
+but in different modules.
 
 ```rust
 #[flame("prefix")]

@@ -16,3 +16,9 @@ proc_macro = true
 flame = "0.2.2"
 syn = { version = "0.15.18", features = ["extra-traits", "full", "fold", "parsing"] }
 quote = "0.6.9"
+
+[features]
+# WARNING: This Cargo feature is not intended for public usage!
+# Used to test `flamer` for module support which currently requires nightly
+# Rust.
+test-nightly = []
