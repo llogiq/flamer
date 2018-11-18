@@ -1,9 +1,9 @@
-// test optional prefix
-
-extern crate flamer;
-use flamer::{flame, noflame};
+//! Test optional prefix.
 
 extern crate flame;
+extern crate flamer;
+
+use flamer::{flame, noflame};
 
 #[flame("top")]
 fn a() {

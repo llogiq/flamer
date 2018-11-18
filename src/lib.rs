@@ -1,8 +1,21 @@
 //! A procedural attribute-macro to insert `flame` calls into code
 //!
-//! You can annotate modules or functions with `#[flame]` (currently you cannot
-//! annotate the whole crate, alas). You can also annotate modules, functions
-//! or other items with `#[noflame]` to omit them from the flame tracing.
+//! The feature parity varies between versions of Rust:
+//! * On stable and beta, you can annotate functions with `#[flame]`.
+//! * On nightly, you can also annotate modules with `#[flame]`.
+//!   You will need to add `#![feature(proc_macro_hygiene)]` in the crate root
+//!   ([related issue][proc_macro_hygiene tracking issue]).
+//!
+//! Alas, currently you cannot annotate the whole crate. For details about why,
+//! see the [custom inner attributes] issue.
+//!
+//! You can also annotate modules, functions or other items with `#[noflame]` to
+//! omit them from the flame tracing.
+//! For any given Rust version, the list of supported items for `#[noflame]` is
+//! the same as for `#[flame]`.
+//!
+//! [proc_macro_hygiene tracking issue]: https://github.com/rust-lang/rust/issues/54727
+//! [custom inner attributes]: https://github.com/rust-lang/rust/issues/54726
 
 extern crate syn;
 extern crate quote;

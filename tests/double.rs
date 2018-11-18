@@ -1,8 +1,10 @@
-#![feature(custom_attribute, proc_macro_hygiene)]
-// test double attrs
+//! Test double attrs.
 
-#[macro_use] extern crate flamer;
+#![cfg(feature = "test-nightly")]
+#![feature(proc_macro_hygiene)]
+
 extern crate flame;
+#[macro_use] extern crate flamer;
 
 #[flame]
 mod inner {
