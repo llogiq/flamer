@@ -14,7 +14,7 @@ proc_macro = true
 
 [dependencies]
 flame = "0.2.2"
-syn = { version = "0.15.36", features = ["extra-traits", "full", "fold", "parsing"] }
+syn = { version = "0.15.38", features = ["extra-traits", "full", "fold", "parsing"] }
 quote = "0.6.12"
 
 [features]
