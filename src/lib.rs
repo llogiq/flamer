@@ -127,11 +127,11 @@ impl Fold for Flamer {
         if self.is_noflame(&i.attrs) {
             return i;
         }
-        if i.constness.is_some() {
+        if i.sig.constness.is_some() {
             return fold::fold_item_fn(self, i);
         }
         let mut i = i;
-        self.push(i.ident.to_string());
+        self.push(i.sig.ident.to_string());
         let name = self.name();
         let stmts = ::std::mem::replace(&mut i.block.stmts, vec![parse_quote! {
             let _flame_guard = ::flame::start_guard(#name);
