@@ -9,7 +9,7 @@ A proc macro to insert appropriate `flame::start_guard(_)` calls (for use with
 **This proc macro requires Rust 1.30.**
 Because flamer is a proc macro attribute, it uses APIs stabilized in Rust 1.30.
 
-Usage:
+##Usage:
 
 In your Cargo.toml add `flame` and `flamer` to your dependencies:
 
@@ -105,6 +105,52 @@ fn method_name() {
     //The corresponding block on the flamegraph will be named "prefix::method_name"
 }
 ```
+
+##Full Example
+```rust
+use std::fs::File;
+
+use flame;
+#[macro_use] extern crate flamer;
+
+#[flame]
+fn make_vec(size: usize) -> Vec<u32> {
+    // using the original lib is still possible
+    let mut res = flame::span_of("vec init", || vec![0_u32; size]);
+    for x in 0..size {
+        res[x] = ((x + 10)/3) as u32;
+    }
+    res
+}
+
+#[flame]
+fn more_computing(i: usize) {
+    for x in 0..(i * 100) {
+        let mut v = make_vec(x);
+        let x = Vec::from(&v[..]);
+        for i in 0..v.len() {
+            let flip = (v.len() - 1) - i as usize;
+            v[i] = x[flip];
+        }
+    }
+}
+
+#[flame]
+fn some_computation() {
+    for i in 0..15 {
+        more_computing(i);
+    }
+}
+
+
+fn main() {
+    some_computation();
+    // in order to create the flamegraph you must call one of the
+    // flame::dump_* functions.
+    flame::dump_html(File::create("flamegraph.html").unwrap()).unwrap();
+}
+```
+![flamegraph](./flamegraph.png "Flamegraph example")
 
 Refer to [flame's documentation](https://docs.rs/flame) to see how output works.
 
