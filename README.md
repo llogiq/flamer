@@ -110,19 +110,22 @@ fn method_name() {
 ```rust
 use std::fs::File;
 
-use flame;
-#[macro_use] extern crate flamer;
+use flame as f;
+use flamer::flame;
 
 #[flame]
 fn make_vec(size: usize) -> Vec<u32> {
     // using the original lib is still possible
-    let mut res = flame::span_of("vec init", || vec![0_u32; size]);
+    let mut res = f::span_of("vec init", || vec![0_u32; size]);
     for x in 0..size {
         res[x] = ((x + 10)/3) as u32;
     }
+    let mut waste_time = 0;
+    for i in 0..size*10 {
+        waste_time += i
+    }
     res
 }
-
 #[flame]
 fn more_computing(i: usize) {
     for x in 0..(i * 100) {
@@ -134,7 +137,6 @@ fn more_computing(i: usize) {
         }
     }
 }
-
 #[flame]
 fn some_computation() {
     for i in 0..15 {
@@ -142,12 +144,12 @@ fn some_computation() {
     }
 }
 
-
+#[flame]
 fn main() {
     some_computation();
     // in order to create the flamegraph you must call one of the
     // flame::dump_* functions.
-    flame::dump_html(File::create("flamegraph.html").unwrap()).unwrap();
+    f::dump_html(File::create("flamegraph.html").unwrap()).unwrap();
 }
 ```
 ![flamegraph](./flamegraph.png "Flamegraph example")
