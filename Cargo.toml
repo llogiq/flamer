@@ -7,7 +7,7 @@ license = "Apache-2.0"
 repository = "https://github.com/llogiq/flamer"
 readme = "README.md"
 keywords = ["flame-graph", "profiling", "compiler-plugin"]
-exclude = [".travis.yml"]
+exclude = [".travis.yml", "flamegraph.png"]
 
 [lib]
 proc_macro = true
