@@ -9,7 +9,7 @@ A proc macro to insert appropriate `flame::start_guard(_)` calls (for use with
 **This proc macro requires Rust 1.30.**
 Because flamer is a proc macro attribute, it uses APIs stabilized in Rust 1.30.
 
-##Usage:
+## Usage:
 
 In your Cargo.toml add `flame` and `flamer` to your dependencies:
 
@@ -106,7 +106,7 @@ fn method_name() {
 }
 ```
 
-##Full Example
+## Full Example
 ```rust
 use std::fs::File;
 
