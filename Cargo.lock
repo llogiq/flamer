@@ -21,7 +21,7 @@ version = "0.4.0"
 dependencies = [
  "flame",
  "quote 1.0.18",
- "syn 1.0.92",
+ "syn 1.0.93",
 ]
 
 [[package]]
@@ -131,9 +131,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.92"
+version = "1.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ff7c592601f11445996a06f8ad0c27f094a58857c2f89e97974ab9235b92c52"
+checksum = "04066589568b72ec65f42d65a1a52436e954b168773148893c020269563decf2"
 dependencies = [
  "proc-macro2 1.0.36",
  "quote 1.0.18",
