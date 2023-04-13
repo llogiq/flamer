@@ -17,9 +17,9 @@
 //! [proc_macro_hygiene tracking issue]: https://github.com/rust-lang/rust/issues/54727
 //! [custom inner attributes]: https://github.com/rust-lang/rust/issues/54726
 
-extern crate syn;
-extern crate quote;
 extern crate proc_macro;
+extern crate quote;
+extern crate syn;
 
 use self::proc_macro::TokenStream;
 use quote::quote;
@@ -27,8 +27,10 @@ use syn::fold::{self, Fold};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 
-use syn::{parse_macro_input, parse_quote, Attribute, ImplItemMethod, Item,
-          ItemFn, ItemImpl, ItemMod, ItemTrait, TraitItemMethod, Token};
+use syn::{
+    parse_macro_input, parse_quote, Attribute, ImplItemFn, Item, ItemFn, ItemImpl, ItemMod,
+    ItemTrait, Token, TraitItemFn,
+};
 
 #[derive(Default)]
 struct Flamer {
@@ -49,11 +51,13 @@ impl Flamer {
     }
 
     fn is_noflame(&self, i: &[Attribute]) -> bool {
-        i.iter().any(|ref a| if a.path.segments.len() == 1 {
-            let ident = &a.path.segments.iter().next().unwrap().ident;
-            ident == "flame" || ident == "noflame"
-        } else {
-            false
+        i.iter().any(|ref a| {
+            if a.path().segments.len() == 1 {
+                let ident = &a.path().segments.iter().next().unwrap().ident;
+                ident == "flame" || ident == "noflame"
+            } else {
+                false
+            }
         })
     }
 }
@@ -88,13 +92,12 @@ impl Fold for Flamer {
         t
     }
 
-    fn fold_trait_item_method(&mut self, i: TraitItemMethod)
-    -> TraitItemMethod {
+    fn fold_trait_item_fn(&mut self, i: TraitItemFn) -> TraitItemFn {
         if i.sig.constness.is_some() || self.is_noflame(&i.attrs) {
             return i;
         }
         self.push(i.sig.ident.to_string());
-        let m = fold::fold_trait_item_method(self, i);
+        let m = fold::fold_trait_item_fn(self, i);
         self.pop();
         m
     }
@@ -113,12 +116,12 @@ impl Fold for Flamer {
         ii
     }
 
-    fn fold_impl_item_method(&mut self, i: ImplItemMethod) -> ImplItemMethod {
+    fn fold_impl_item_fn(&mut self, i: ImplItemFn) -> ImplItemFn {
         if i.sig.constness.is_some() || self.is_noflame(&i.attrs) {
             return i;
         }
         self.push(i.sig.ident.to_string());
-        let method = fold::fold_impl_item_method(self, i);
+        let method = fold::fold_impl_item_fn(self, i);
         self.pop();
         method
     }
@@ -133,9 +136,12 @@ impl Fold for Flamer {
         let mut i = i;
         self.push(i.sig.ident.to_string());
         let name = self.name();
-        let stmts = ::std::mem::replace(&mut i.block.stmts, vec![parse_quote! {
-            let _flame_guard = ::flame::start_guard(#name);
-        }]);
+        let stmts = ::std::mem::replace(
+            &mut i.block.stmts,
+            vec![parse_quote! {
+                let _flame_guard = ::flame::start_guard(#name);
+            }],
+        );
         for stmt in stmts {
             i.block.stmts.push(fold::fold_stmt(self, stmt));
         }

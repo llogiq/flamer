@@ -16,7 +16,7 @@ In your Cargo.toml add `flame` and `flamer` to your dependencies:
 ```toml
 [dependencies]
 flame = "0.2.2"
-flamer = "0.3"
+flamer = "0.5"
 ```
 
 Then in your crate root, add the following:
